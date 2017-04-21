@@ -1,17 +1,15 @@
 //Michael Ly, CS380
 
-import sun.rmi.server.InactiveGroupException;
-
 import java.util.*;
 import java.io.*;
 import java.net.*;
-import java.util.concurrent.ExecutionException;
 
 public class PhysLayerClient {
 
     public static void main(String[] args)
     {
         try{
+            //Connecting to server
             Socket socket = new Socket("codebank.xyz", 38002);
             if(socket.isConnected())
             {
@@ -26,6 +24,7 @@ public class PhysLayerClient {
             boolean[] highlow = new boolean[320];
             byte[] decBA = new byte[32];
 
+            //getting preamble to determine baseline
             for(int i = 0; i < 64; i++)
             {
                 double sig = (double) is.read();
@@ -35,11 +34,13 @@ public class PhysLayerClient {
             avgBline = temp/64;
             System.out.printf("Baseline established from preamble: %.2f\n", avgBline);
 
+            //getting signals from server
             for(int i = 0; i < serverA32.length; i++)
             {
                 serverA32[i] = (int) is.read();
             }
 
+            //comparing signals to baseline to determine NRZI
             for(int i = 0; i < serverA32.length; i++)
             {
                 if(serverA32[i] <= avgBline)
@@ -52,6 +53,7 @@ public class PhysLayerClient {
                 }
             }
 
+            //Decoding NRZI to 0 and 1 bits
             String decodeNRZI = "";
             if(highlow[0] == false)
                 decodeNRZI += 0;
@@ -76,6 +78,7 @@ public class PhysLayerClient {
                 }
             }
 
+            //Decoding NRZI bits layered with 4b/5b to regular bytes
             System.out.print("Recieved 32 bytes: ");
             for(int i = 0; i < decodeNRZI.length()/10; i++)
             {
@@ -120,6 +123,7 @@ public class PhysLayerClient {
         }
     }
 
+    //4b/5b table
     public static int switch5b4b(String s) {
 
         switch (s) {
